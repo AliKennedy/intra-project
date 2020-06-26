@@ -101,7 +101,7 @@ def reconnect(ip=IP, port=PORT):
 def run():
 	while True: # main loop
 		try:
-			t = 20 #seconds * minutes - Send data every 10 minutes
+			t = 60 * 1 #seconds * minutes - Send data every 10 minutes
 			while t > 0:
 				time.sleep(1)
 				t -= 1

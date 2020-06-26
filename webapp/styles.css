@@ -1,0 +1,148 @@
+header {
+	left: 0;
+	bottom: 0;
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	text-align: center;
+	background-color: #75B328;
+}
+
+body {
+	background-image: url("images/dots_background.jpg");
+	min-height: 400px;
+	margin-bottom: 100px;
+	clear:both;
+
+}
+
+#nav-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #4d4d4d;
+}
+
+#nav-item {
+  float: left;
+}
+
+#nav-item a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+/* Change the link color to #111 (black) on hover */
+#nav-item a:hover {
+  background-color: #111;
+}
+
+.notifications {
+	float: right;
+}
+
+#notification-list {
+	list-style: none;
+	max-width: 80%;
+	margin: auto;
+	background-color: white;
+	float: right;
+}
+
+#notification-item {
+	color:red;
+}
+
+
+#engineer {
+	color: grey;
+	font-weight: bold;
+	max-width: 80%;
+	margin: auto;
+}
+
+#engandcmp li {
+	text-decoration: none;
+	colour: black;
+}
+
+
+input[type=text] {
+	width: 30%;
+	padding: 5px 10px;
+	margin: 8px 0;
+	box-sizing: border-box;
+}
+
+input[type=password] {
+	width: 30%;
+	padding: 5px 10px;
+	margin: 8px 0;
+	box-sizing: border-box;
+}
+
+input[type=email] {
+	width: 30%;
+	padding: 5px 10px;
+	margin: 8px 0;
+	box-sizing: border-box;
+}
+
+button[type=submit] {
+
+	background-color: #75B328; /* Green */
+	border: none;
+	color: white;
+	padding: 15px 32px;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-size: 16px;
+
+}
+
+.login_button {
+	margin: auto;
+}
+
+
+label {
+	font-weight: bold;
+}
+
+p {
+	background-color: white;
+}
+
+table {
+	border: 1px solid black;
+	padding: 20px;
+	margin: 20px;
+	max-width: 80%;
+	margin: auto;
+	background-color: white;
+}
+
+caption {
+	font-weight: bold;
+	font-size: 16pt;
+	margin: 3px;
+}
+
+footer p {
+	background-color: #75B328;
+}
+
+footer {
+	position: fixed;
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	color: white;
+	text-align: center;
+	background-color: #75B328;
+}
