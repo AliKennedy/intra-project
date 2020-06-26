@@ -5,18 +5,18 @@ from datetime import datetime
 import sys
 import json
 import requests
+import random
 
 
 #values read/importded from dispenser software
-fluid_pc = 100
-battery_pc = 99
-number_of_uses = 12
-number_of_alerts = 15
+fluid_pc = random.randint(0, 100)
+number_of_uses = random.randint(0, 40)
+number_of_alerts = number_of_uses + random.randint(0, 10)
 num_ignored = number_of_alerts - number_of_uses
 #to be optionally changed by end user through app
 volume_to_dispense = 5 #dispense 5 ml
 
-PORT = 52871 #predecided arbitrary port number
+PORT = 52872 #predecided arbitrary port number
 DISPENSER_ID = input("5 character dispenser ID: ") #for testing
 IP = '0.0.0.0' #any/all IP addresses on this device
 
@@ -49,27 +49,36 @@ def announce_to_network():
 def jsonify(dic):
 	return (json.dumps(dic, indent=4)) #returns json string to be sent to server
 
-def report_status():
-	#current_time = time.ctime(time.time()) #today's date and time
-	try:
-		date = str(datetime.date(datetime.now()))
-		time = str(datetime.time(datetime.now()))
 
-		status = {'id' : DISPENSER_ID,
-			'fluid' : fluid_pc,
-			'uses' : number_of_uses,
-			'alerts' : number_of_alerts,
-			'ignored' : num_ignored,
-			'date' : date,
-			'time' : time}
-		status = jsonify(status) #convert to JSON string
-		server_connection.sendall(status.encode()) #send to server
+def send_to_server(status):
+	server_connection.sendall(status.encode())
+
+
+def report_status():
+
+	date = str(datetime.date(datetime.now()))
+	time = str(datetime.time(datetime.now()))
+
+	date_time = date + " " + time[:-6]
+	status = {'id' : DISPENSER_ID,
+		'fluid' : str(fluid_pc),
+		'uses' : str(number_of_uses),
+		'alerts' : str(number_of_alerts),
+		'ignored' : str(num_ignored),
+		'date_time' : date_time}
+	status = jsonify(status) #convert to JSON string
+
+	try:
+		send_to_server(status)
+		# send_log_to_server()
 		print("sent!")
 	except KeyboardInterrupt:
 		print("Disconnecting...")
 		server_connection.shutdown(2)
 		server_connection.close()
 		sys.exit(0)
+	except: #server down
+		print('hi')
 
 def change_fluid_dispensed(ml):
 	volume_to_dispense = ml

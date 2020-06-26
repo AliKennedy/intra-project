@@ -5,10 +5,11 @@ import threading as th
 import select
 import json
 import mysql.connector
+import datetime as datetime
 
 #socket set up
 HOST_IP = '0.0.0.0' #any/all ip addresses on this device
-PORT = 52871 #predecided arbitrary port number
+PORT = 52872 #predecided arbitrary port number
 connected_dispensers = {}
 
 #MySQL connection set up
@@ -47,11 +48,15 @@ def start_dispenser_thread(connection, address):
 					if not dispenser_is_connected(dispenser_id): #check if the dispenser is already connected
 						connected_dispensers[connection]['id'] = dispenser_id #add to the dictionary
 						print("retrieved dispenser name")
-						#store in database
-						mycursor.execute("INSERT INTO dispensers (id, username) VALUES (%s, %s)", (dispenser_id, None))
+						mycursor.execute(("DELETE FROM notifications WHERE dispenser_id = '{}' AND type = 'offline'").format(dispenser_id),)
 						mydb.commit()
-
-						id_received = True #stop looping
+						#store in database
+						try: #fails if dispenser has already been registered on the system before
+							#this is because dispenser_id is set as a UNIQUE field in MySQL database
+							mycursor.execute("INSERT INTO dispensers (id, user_id) VALUES (%s, %s)", (dispenser_id, None))
+							mydb.commit()
+						except:
+							id_received = True #stop looping
 			else:
 				pass
 		except:
@@ -64,7 +69,7 @@ def dispenser_thread(connection, address):
 	connected = True
 	low_fluid = "dispenser {}'s fluid is low and needs to be topped up"
 	id_string = connected_dispensers[connection]['id']
-	sql = "INSERT INTO dispenserdata (id, fluidlevel, uses, alerts, ignored, date, time) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+	sql = "INSERT INTO dispenserdata (id, fluidlevel, uses, alerts, ignored, date_time) VALUES (%s, %s, %s, %s, %s, %s)"
 	while connected and server_running:
 		try:
 			data = connection.recv(4096) #receive up to 4kb of data
@@ -73,21 +78,43 @@ def dispenser_thread(connection, address):
 				if len(message) == 5: #extra attempts to send id upon connection
 					pass
 				elif len(message) > 5: #status
+					print(message)
 					status = json.loads(message)#convert to JSON object
 					#send this data to database
-					values = (status["id"], status["fluid"], status["uses"], status["alerts"], status["ignored"], status["date"], status["time"])
+					print(status["date_time"])
+					values = (status["id"], status["fluid"], status["uses"], status["alerts"], status["ignored"], status["date_time"])
 					mycursor.execute(sql, values)
 					mydb.commit()
-					if status['fluid percentage'] == 10:
-						#alert user (web app or phone app)
-						print(low_fluid.format(id_string))
+					if int(status["fluid"]) <= 10: #low fluid
+						#alert user (add notification to database)
+						sql = "INSERT INTO notifications (dispenser_id, type, message) VALUES (%s, %s, %s)"
+						values = (status["id"], "low_fluid", "{} has low fluid".format(status["id"]))
+						mycursor.execute(sql, values)
+						mydb.commit()
+					elif int(status["fluid"]) > 10:
+						#check if it has recently been topped up
+						sql = "SELECT * FROM notifications (dispenser_id, type) WHERE dispenser_id = '{}' AND type = 'low_fluid'".format(status["id"])
+						mycursor.execute(sql,)
+						result = mycursor.fetchone()
+						if len(result) > 0:
+							#remove low_fluid notification from table
+							sql = "DELETE FROM notifications WHERE dispenser_id = '{}' and type = 'low_fluid'".format(status["id"])
+							mycursor.execute(sql, )
+							mydb.commit()
+
 			else: #timeout, unexpected power loss etc
 				#alert user which dispenser is no longer active
 				print("dispenser {} is offline".format(id_string))
 				del connected_dispensers[connection]
+				sql = "INSERT INTO notifications (dispenser_id, type, message) VALUES (%s, %s, %s)"
+				values = (status["id"], "offline", "{} has gone offline".format(id_string))
+				mycursor.execute(sql,values)
+				mydb.commit()
 				connected = False
+				break
 		except KeyboardInterrupt:
 			connected = False
+			break
 
 		except:
 			continue
